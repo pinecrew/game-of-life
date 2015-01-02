@@ -1,15 +1,15 @@
-// g++ -Wall -lSDL2 template.cpp -o template
 #include <cstdio>
 #include <cstdlib>
 #include <SDL2/SDL.h>
+#include "draw.hpp"
 
 const char * game_name = "Conway's Game of Life";
 const int screen_width = 640;
 const int screen_height = 480;
 bool quit_flag = false;
 
-SDL_Window *window = NULL;
-SDL_Renderer *render = NULL;
+SDL_Window * window = NULL;
+SDL_Renderer * render = NULL;
 SDL_Event event;
 
 void game_send_error( int code ) {
@@ -55,7 +55,7 @@ void game_init( void ) {
     if ( render == NULL ) {
         game_send_error( EXIT_FAILURE );
     }
-    // other code
+    draw_init( render );
 }
 
 int main( int argc, char * argv[] ) {

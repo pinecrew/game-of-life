@@ -2,7 +2,7 @@ PROG=game
 CXX=g++
 CFLAGS=$(shell sdl2-config --cflags)
 LFLAGS=-Wall $(shell sdl2-config --libs)
-SOURCES=game.cpp
+SOURCES=game.cpp draw.cpp
 
 OBJS := $(patsubst %.cpp, %.o, $(SOURCES))
 DEPS := $(patsubst %.o, %.d, $(OBJS))

@@ -8,7 +8,9 @@
 const char * game_name = "Conway's Game of Life";
 const int screen_width = 640;
 const int screen_height = 480;
+int pixel_size = 8;
 bool quit_flag = false;
+bool button_set = false;
 
 SDL_Window * window = NULL;
 SDL_Renderer * render = NULL;
@@ -36,10 +38,17 @@ void game_event( SDL_Event *event ) {
                     break;
             }
             break;
+        case SDL_MOUSEMOTION:
+            if ( button_set ) {
+                draw.insert( std::pair< int, int >( event->button.x / pixel_size, 
+                                                    event->button.y / pixel_size ) );
+            }
+            break;
         case SDL_MOUSEBUTTONDOWN:
             switch ( event->button.button ) {
                 case SDL_BUTTON_LEFT:
-                    draw.insert( std::pair< int, int >( event->button.x / 4, event->button.y / 4 ) );
+                    draw.insert( std::pair< int, int >( event->button.x / pixel_size, 
+                                                        event->button.y / pixel_size ) );
                     break;
                 case SDL_BUTTON_RIGHT:
                     setInitialCondition( draw );
@@ -47,6 +56,11 @@ void game_event( SDL_Event *event ) {
                 default:
                     break;
             }
+            button_set = true;
+            break;
+        case SDL_MOUSEBUTTONUP:
+            button_set = false;
+            break;
         default:
             break;
     }
@@ -58,13 +72,9 @@ void game_loop( void ) {
 
 void game_render( void ) {
     SDL_RenderClear( render );
-    // render code
     for ( auto p = draw.begin(); p != draw.end(); p++ ) {
-        draw_pixel_size( p->first * 4, p->second * 4, 4, COLOR_WHITE );
+        draw_pixel_size( p->first * pixel_size, p->second * pixel_size, pixel_size, COLOR_WHITE );
     }
-    // draw_rectangle_fill( 100, 100, 10, 10, COLOR_RED );
-    // draw_rectangle_outline( 200, 100, 10, 10, COLOR_BLUE );
-    // draw_pixel_size( 100, 200, 5, COLOR_GREEN );
     SDL_RenderPresent( render );
 }
 

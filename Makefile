@@ -1,7 +1,7 @@
 PROG=game
 CXX=g++
-CFLAGS=
-LFLAGS=-Wall -lSDL2
+CFLAGS=$(shell sdl2-config --cflags)
+LFLAGS=-Wall $(shell sdl2-config --libs)
 SOURCES=game.cpp
 
 OBJS := $(patsubst %.cpp, %.o, $(SOURCES))
@@ -14,7 +14,7 @@ $(PROG): $(OBJS) $(DEPS)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 %.d: %.cpp
-	@set -e; $(CC) -M $< | \
+	@set -e; $(CXX) -M $< | \
 		sed -e 's%\($*\)\.o[ :]*%\1.o $@ : %g' > $@; \
 		[ -s $@ ] || rm -f $@
 	@echo create $@

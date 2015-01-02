@@ -34,6 +34,9 @@ void game_event( SDL_Event *event ) {
                 case SDLK_RIGHT:
                     draw = getNextStep();
                     break;
+                case SDLK_r:
+                    draw.clear();
+                    break;
                 default:
                     break;
             }

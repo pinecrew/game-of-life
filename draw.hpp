@@ -11,4 +11,7 @@ enum {
 };
 
 void draw_init( SDL_Renderer * render );
-void draw_rectangle( int x, int y, int w, int h, Uint32 color );
+void draw_rectangle_param( int x, int y, int w, int h, Uint32 color, bool param );
+void draw_rectangle_outline( int x, int y, int w, int h, Uint32 color );
+void draw_rectangle_fill( int x, int y, int w, int h, Uint32 color );
+void draw_pixel_size( int x, int y, int size, Uint32 color );

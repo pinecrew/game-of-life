@@ -56,8 +56,8 @@ void game_event( SDL_Event *event ) {
             }
             break;
         case SDL_MOUSEMOTION:
-            mx = event->motion.x;
-            my = event->motion.y;
+            mx = event->motion.x - pixel_size / 2;
+            my = event->motion.y - pixel_size / 2;
             if ( button_set ) {
                 draw.insert( std::pair< int, int >( event->motion.x / pixel_size,
                                                     event->motion.y / pixel_size ) );
@@ -113,7 +113,6 @@ void game_init( void ) {
     if ( render == NULL ) {
         game_send_error( EXIT_FAILURE );
     }
-    SDL_ShowCursor( SDL_DISABLE ); // убираем курсор -- можно удалить (при ненадобности) 
     draw_init( render );
 }
 

@@ -8,7 +8,7 @@
 const char * game_name = "Conway's Game of Life";
 const int screen_width = 640;
 const int screen_height = 480;
-int pixel_size = 8;
+int pixel_size = 8, mx = -1, my = -1;
 bool quit_flag = false;
 bool button_set = false;
 
@@ -48,14 +48,19 @@ void game_event( SDL_Event *event ) {
                 case SDLK_r:
                     draw.clear();
                     break;
+                case SDLK_ESCAPE:
+                    quit_flag = true;
+                    break;
                 default:
                     break;
             }
             break;
         case SDL_MOUSEMOTION:
+            mx = event->motion.x;
+            my = event->motion.y;
             if ( button_set ) {
-                draw.insert( std::pair< int, int >( event->button.x / pixel_size,
-                                                    event->button.y / pixel_size ) );
+                draw.insert( std::pair< int, int >( event->motion.x / pixel_size,
+                                                    event->motion.y / pixel_size ) );
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
@@ -87,6 +92,7 @@ void game_render( void ) {
     for ( auto p = draw.begin(); p != draw.end(); p++ ) {
         draw_pixel_size( p->first * pixel_size, p->second * pixel_size, pixel_size, COLOR_WHITE );
     }
+    draw_pixel_size( mx, my, pixel_size, COLOR_RED );
     SDL_RenderPresent( render );
 }
 
@@ -107,6 +113,7 @@ void game_init( void ) {
     if ( render == NULL ) {
         game_send_error( EXIT_FAILURE );
     }
+    SDL_ShowCursor( SDL_DISABLE ); // убираем курсор -- можно удалить (при ненадобности) 
     draw_init( render );
 }
 

@@ -3,5 +3,4 @@
 
 using namespace std;
 
-void setInitialCondition(set< pair< int, int > >);
-set< pair< int, int > > getNextStep();
+void nextStep(set< pair< int, int > >&);

@@ -32,7 +32,7 @@ void game_event( SDL_Event *event ) {
         case SDL_KEYDOWN:
             switch ( event->key.keysym.sym ) {
                 case SDLK_RIGHT:
-                    draw = getNextStep();
+                    nextStep(draw);
                     break;
                 case SDLK_r:
                     draw.clear();
@@ -43,18 +43,15 @@ void game_event( SDL_Event *event ) {
             break;
         case SDL_MOUSEMOTION:
             if ( button_set ) {
-                draw.insert( std::pair< int, int >( event->button.x / pixel_size, 
+                draw.insert( std::pair< int, int >( event->button.x / pixel_size,
                                                     event->button.y / pixel_size ) );
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
             switch ( event->button.button ) {
                 case SDL_BUTTON_LEFT:
-                    draw.insert( std::pair< int, int >( event->button.x / pixel_size, 
+                    draw.insert( std::pair< int, int >( event->button.x / pixel_size,
                                                         event->button.y / pixel_size ) );
-                    break;
-                case SDL_BUTTON_RIGHT:
-                    setInitialCondition( draw );
                     break;
                 default:
                     break;
@@ -89,7 +86,7 @@ void game_destroy( void ) {
 }
 
 void game_init( void ) {
-    window = SDL_CreateWindow( game_name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
+    window = SDL_CreateWindow( game_name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                screen_width, screen_height, SDL_WINDOW_SHOWN );
     if ( window == NULL ) {
         game_send_error( EXIT_FAILURE );

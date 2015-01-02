@@ -1,4 +1,5 @@
 #include <set>
+#include "logics.hpp"
 
 using namespace std;
 set< pair< int, int > > alive;

@@ -1,4 +1,3 @@
-#include <set>
 #include "logics.hpp"
 
 using namespace std;
@@ -60,3 +59,14 @@ void next() {
     }
     alive = next;
 }
+
+
+void setInitialCondition( set< pair< int, int > > ic ){
+    alive = ic;
+}
+
+set< pair< int, int > > getNextStep(){
+    next();
+    return alive;
+}
+

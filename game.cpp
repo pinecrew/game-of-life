@@ -1,7 +1,9 @@
 #include <cstdio>
 #include <cstdlib>
+#include <set>
 #include <SDL2/SDL.h>
 #include "draw.hpp"
+#include "logics.hpp"
 
 const char * game_name = "Conway's Game of Life";
 const int screen_width = 640;
@@ -11,6 +13,8 @@ bool quit_flag = false;
 SDL_Window * window = NULL;
 SDL_Renderer * render = NULL;
 SDL_Event event;
+
+std::set< std::pair< int, int > > draw;
 
 void game_send_error( int code ) {
     printf( "[error]: %s\n", SDL_GetError() );
@@ -23,6 +27,26 @@ void game_event( SDL_Event *event ) {
         case SDL_QUIT:
             quit_flag = true;
             break;
+        case SDL_KEYDOWN:
+            switch ( event->key.keysym.sym ) {
+                case SDLK_RIGHT:
+                    draw = getNextStep();
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            switch ( event->button.button ) {
+                case SDL_BUTTON_LEFT:
+                    draw.insert( std::pair< int, int >( event->button.x / 4, event->button.y / 4 ) );
+                    break;
+                case SDL_BUTTON_RIGHT:
+                    setInitialCondition( draw );
+                    break;
+                default:
+                    break;
+            }
         default:
             break;
     }
@@ -35,6 +59,12 @@ void game_loop( void ) {
 void game_render( void ) {
     SDL_RenderClear( render );
     // render code
+    for ( auto p = draw.begin(); p != draw.end(); p++ ) {
+        draw_pixel_size( p->first * 4, p->second * 4, 4, COLOR_WHITE );
+    }
+    // draw_rectangle_fill( 100, 100, 10, 10, COLOR_RED );
+    // draw_rectangle_outline( 200, 100, 10, 10, COLOR_BLUE );
+    // draw_pixel_size( 100, 200, 5, COLOR_GREEN );
     SDL_RenderPresent( render );
 }
 

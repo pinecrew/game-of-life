@@ -23,6 +23,17 @@ void game_send_error( int code ) {
     exit( code );
 }
 
+void set_point( int x, int y ) {
+    auto obj = std::pair< int, int >( x / pixel_size, y / pixel_size );
+    auto it = draw.find( obj );
+
+    if ( it != draw.end() ) {
+        draw.erase( it );
+    } else {
+        draw.insert( obj );
+    }
+}
+
 void game_event( SDL_Event *event ) {
     SDL_PollEvent( event );
     switch ( event->type ) {
@@ -43,15 +54,16 @@ void game_event( SDL_Event *event ) {
             break;
         case SDL_MOUSEMOTION:
             if ( button_set ) {
-                draw.insert( std::pair< int, int >( event->button.x / pixel_size, 
+                draw.insert( std::pair< int, int >( event->button.x / pixel_size,
                                                     event->button.y / pixel_size ) );
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
             switch ( event->button.button ) {
                 case SDL_BUTTON_LEFT:
-                    draw.insert( std::pair< int, int >( event->button.x / pixel_size, 
-                                                        event->button.y / pixel_size ) );
+                    if ( button_set == false ) {
+                        set_point( event->button.x, event->button.y );
+                    }
                     break;
                 case SDL_BUTTON_RIGHT:
                     setInitialCondition( draw );

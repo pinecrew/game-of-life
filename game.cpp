@@ -43,7 +43,7 @@ void game_event( SDL_Event *event ) {
         case SDL_KEYDOWN:
             switch ( event->key.keysym.sym ) {
                 case SDLK_RIGHT:
-                    draw = getNextStep();
+                    nextStep(draw);
                     break;
                 case SDLK_r:
                     draw.clear();
@@ -64,9 +64,6 @@ void game_event( SDL_Event *event ) {
                     if ( button_set == false ) {
                         set_point( event->button.x, event->button.y );
                     }
-                    break;
-                case SDL_BUTTON_RIGHT:
-                    setInitialCondition( draw );
                     break;
                 default:
                     break;
@@ -94,14 +91,14 @@ void game_render( void ) {
 }
 
 void game_destroy( void ) {
-    // insert code
+    draw.clear();
     SDL_DestroyRenderer( render );
     SDL_DestroyWindow( window );
     SDL_Quit();
 }
 
 void game_init( void ) {
-    window = SDL_CreateWindow( game_name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
+    window = SDL_CreateWindow( game_name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                screen_width, screen_height, SDL_WINDOW_SHOWN );
     if ( window == NULL ) {
         game_send_error( EXIT_FAILURE );

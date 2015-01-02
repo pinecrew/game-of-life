@@ -1,8 +1,6 @@
 #include "logics.hpp"
 
-set< pair< int, int > > alive;
-
-bool check_neighbours(pair< int, int > x){
+bool check_neighbours(set< pair< int, int > >& alive, pair< int, int > x){
     int count = 0;
     bool empty = (alive.find(x) == alive.end());
     x.first += 1;
@@ -24,7 +22,7 @@ bool check_neighbours(pair< int, int > x){
     return (count == 2 && !empty) || (count == 3);
 }
 
-void next() {
+void nextStep(set< pair< int, int > >& alive){
 /*
     весьма и весьма наивный способ расчитать следующее состояние
 
@@ -38,34 +36,24 @@ void next() {
     set< pair< int, int > > next;
     for(auto i = alive.begin(); i != alive.end(); i++) {
         auto e = *i;
-        if (check_neighbours(e)) next.insert( e );
+        if (check_neighbours(alive, e)) next.insert( e );
         e.first += 1;
-        if (check_neighbours(e)) next.insert( e );
+        if (check_neighbours(alive, e)) next.insert( e );
         e.second += 1;
-        if (check_neighbours(e)) next.insert( e );
+        if (check_neighbours(alive, e)) next.insert( e );
         e.first -= 1;
-        if (check_neighbours(e)) next.insert( e );
+        if (check_neighbours(alive, e)) next.insert( e );
         e.first -= 1;
-        if (check_neighbours(e)) next.insert( e );
+        if (check_neighbours(alive, e)) next.insert( e );
         e.second -= 1;
-        if (check_neighbours(e)) next.insert( e );
+        if (check_neighbours(alive, e)) next.insert( e );
         e.second -= 1;
-        if (check_neighbours(e)) next.insert( e );
+        if (check_neighbours(alive, e)) next.insert( e );
         e.first += 1;
-        if (check_neighbours(e)) next.insert( e );
+        if (check_neighbours(alive, e)) next.insert( e );
         e.first += 1;
-        if (check_neighbours(e)) next.insert( e );
+        if (check_neighbours(alive, e)) next.insert( e );
     }
     alive = next;
-}
-
-
-void setInitialCondition( set< pair< int, int > > ic ){
-    alive = ic;
-}
-
-set< pair< int, int > > getNextStep(){
-    next();
-    return alive;
 }
 

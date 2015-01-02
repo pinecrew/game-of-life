@@ -1,6 +1,5 @@
 #include "logics.hpp"
 
-using namespace std;
 set< pair< int, int > > alive;
 
 bool check_neighbours(pair< int, int > x){

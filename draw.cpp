@@ -6,32 +6,41 @@ void draw_init( SDL_Renderer * render ) {
     _render = render;
 }
 
-void draw_rectangle_param( int x, int y, int w, int h, Uint32 color, bool param ) {
-    SDL_Rect rect = { x, y, w, h };
+void set_coloru( Uint32 color ) {
     Uint8 r, ro, g, go, b, bo, ao;
-    
+
     r = ( color >> 16 );
     g = ( ( color >> 8 ) & 0xff );
     b = ( color & 0xff );
     SDL_GetRenderDrawColor( _render, &ro, &go, &bo, &ao );
-    SDL_SetRenderDrawColor( _render, r, g, b, 0xff );
-    if ( param ) {
+    SDL_SetRenderDrawColor( _render, r, g, b, ao );
+}
+
+void set_color3u( Uint8 red, Uint8 green, Uint8 blue ) {
+    Uint8 ro, go, bo, ao;
+    
+    SDL_GetRenderDrawColor( _render, &ro, &go, &bo, &ao );
+    SDL_SetRenderDrawColor( _render, red, green, blue, ao );
+}
+
+void set_color4u( Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha ) {
+    Uint8 ro, go, bo, ao;
+    
+    SDL_GetRenderDrawColor( _render, &ro, &go, &bo, &ao );
+    SDL_SetRenderDrawColor( _render, red, green, blue, alpha );
+}
+
+void draw_rectangle_param( int x, int y, int w, int h, bool fill ) {
+    SDL_Rect rect = { x, y, w, h };
+
+    if ( fill ) {
         SDL_RenderFillRect( _render, &rect );
     } else {
         SDL_RenderDrawRect( _render, &rect );
         SDL_RenderDrawPoint( _render, x + w - 1, y + h - 1 );
     }
-    SDL_SetRenderDrawColor( _render, ro, bo, go, ao );   
 }
 
-void draw_rectangle_outline( int x, int y, int w, int h, Uint32 color ) {
-    draw_rectangle_param( x, y, w, h, color, false );
-}
-
-void draw_rectangle_fill( int x, int y, int w, int h, Uint32 color ) {
-    draw_rectangle_param( x, y, w, h, color, true ); 
-}
-
-void draw_pixel_size( int x, int y, int size, Uint32 color ) {
-    draw_rectangle_fill( x, y, size, size, color );
+void draw_pixel_size( int x, int y, int size ) {
+    draw_rectangle_param( x, y, size, size, true );
 }

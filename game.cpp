@@ -72,8 +72,8 @@ void game_event( SDL_Event *event ) {
             }
             break;
         case SDL_MOUSEMOTION:
-            mx = event->motion.x - pixel_size / 2;
-            my = event->motion.y - pixel_size / 2;
+            mx = (int) event->motion.x / pixel_size * pixel_size;
+            my = (int) event->motion.y / pixel_size * pixel_size;
             if ( button_set ) {
                 draw.insert( std::pair< int, int >( event->motion.x / pixel_size,
                                                     event->motion.y / pixel_size ) );

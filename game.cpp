@@ -15,12 +15,28 @@ bool button_set = false;
 SDL_Window * window = NULL;
 SDL_Renderer * render = NULL;
 SDL_Event event;
+SDL_Texture * texture = NULL;
 
 std::set< std::pair< int, int > > draw;
 
 void game_send_error( int code ) {
     printf( "[error]: %s\n", SDL_GetError() );
     exit( code );
+}
+
+SDL_Texture * generate_wireframe_texture( SDL_Renderer * render ) {
+    SDL_Texture * texture = SDL_CreateTexture( render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, screen_width, screen_height );
+    SDL_SetRenderTarget( render, texture );
+    set_color4u( 0xff, 0xff, 0xff, 0x64 );
+    for ( size_t i = 0; i < screen_width; i += pixel_size ) {
+        SDL_RenderDrawLine( render, i, 0, i, screen_height );
+    }
+    for ( size_t j = 0; j < screen_height; j += pixel_size ) {
+        SDL_RenderDrawLine( render, 0, j, screen_width, j );
+    }
+    set_color4u( 0xff, 0xff, 0xff, 0xff );
+    SDL_SetRenderTarget( render, NULL );
+    return texture;
 }
 
 void set_point( int x, int y ) {
@@ -89,31 +105,39 @@ void game_loop( void ) {
 
 void game_render( void ) {
     SDL_RenderClear( render );
+    SDL_RenderCopy( render, texture, NULL, NULL );
+    set_coloru( COLOR_WHITE );
     for ( auto p = draw.begin(); p != draw.end(); p++ ) {
-        draw_pixel_size( p->first * pixel_size, p->second * pixel_size, pixel_size, COLOR_WHITE );
+        draw_pixel_size( p->first * pixel_size, p->second * pixel_size, pixel_size );
     }
-    draw_pixel_size( mx, my, pixel_size, COLOR_RED );
+    set_coloru( COLOR_RED );
+    draw_pixel_size( mx, my, pixel_size );
+    set_coloru( COLOR_BLACK );
     SDL_RenderPresent( render );
 }
 
 void game_destroy( void ) {
     draw.clear();
+    SDL_DestroyTexture( texture );
     SDL_DestroyRenderer( render );
     SDL_DestroyWindow( window );
     SDL_Quit();
 }
 
 void game_init( void ) {
+    SDL_Init( SDL_INIT_VIDEO | SDL_INIT_EVENTS );
     window = SDL_CreateWindow( game_name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                screen_width, screen_height, SDL_WINDOW_SHOWN );
     if ( window == NULL ) {
         game_send_error( EXIT_FAILURE );
     }
-    render = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC );
+    render = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE );
     if ( render == NULL ) {
         game_send_error( EXIT_FAILURE );
     }
+    SDL_SetRenderDrawBlendMode( render, SDL_BLENDMODE_BLEND ); 
     draw_init( render );
+    texture = generate_wireframe_texture( render );
 }
 
 int main( int argc, char * argv[] ) {

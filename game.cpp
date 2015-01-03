@@ -24,9 +24,11 @@ void game_send_error( int code ) {
     exit( code );
 }
 
-SDL_Texture * generate_wireframe_texture( SDL_Renderer * render ) {
-    SDL_Texture * texture = SDL_CreateTexture( render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, screen_width, screen_height );
+SDL_Texture * generate_wireframe_texture( void ) {
+    SDL_Texture * texture = SDL_CreateTexture( render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 
+                                               screen_width, screen_height );
     SDL_SetRenderTarget( render, texture );
+    SDL_RenderClear( render );
     set_color4u( 0xff, 0xff, 0xff, 0x64 );
     for ( size_t i = 0; i < screen_width; i += pixel_size ) {
         SDL_RenderDrawLine( render, i, 0, i, screen_height );
@@ -47,6 +49,17 @@ void set_point( int x, int y ) {
         draw.erase( it );
     } else {
         draw.insert( obj );
+    }
+}
+
+void gamepole_resize( int resize ) {
+    SDL_DestroyTexture( texture );
+    if ( resize < 0 && pixel_size == 3 ) {
+        return;
+    }
+    pixel_size += resize;
+    if ( pixel_size > 3 ) {
+        texture = generate_wireframe_texture();
     }
 }
 
@@ -72,11 +85,21 @@ void game_event( SDL_Event *event ) {
             }
             break;
         case SDL_MOUSEMOTION:
-            mx = (int) event->motion.x / pixel_size * pixel_size;
-            my = (int) event->motion.y / pixel_size * pixel_size;
+            mx = ( event->motion.x ) / pixel_size * pixel_size;
+            my = ( event->motion.y ) / pixel_size * pixel_size;
             if ( button_set ) {
-                draw.insert( std::pair< int, int >( event->motion.x / pixel_size,
-                                                    event->motion.y / pixel_size ) );
+                draw.insert( std::pair< int, int >( ( event->motion.x ) / pixel_size,
+                                                    ( event->motion.y ) / pixel_size) );
+            }
+            break;
+        case SDL_MOUSEWHEEL:
+            switch ( event->wheel.type ) {
+                case SDL_MOUSEWHEEL:
+                    gamepole_resize( event->wheel.y );
+                    event->wheel.y = 0; // dirty hack
+                    break;
+                default:
+                    break;
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
@@ -131,13 +154,14 @@ void game_init( void ) {
     if ( window == NULL ) {
         game_send_error( EXIT_FAILURE );
     }
-    render = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE );
+    render = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | 
+                                 SDL_RENDERER_TARGETTEXTURE );
     if ( render == NULL ) {
         game_send_error( EXIT_FAILURE );
     }
     SDL_SetRenderDrawBlendMode( render, SDL_BLENDMODE_BLEND ); 
     draw_init( render );
-    texture = generate_wireframe_texture( render );
+    texture = generate_wireframe_texture();
 }
 
 int main( int argc, char * argv[] ) {

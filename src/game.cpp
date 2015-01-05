@@ -1,13 +1,17 @@
 #include <cstdio>
 #include <cstdlib>
+#include <locale>
 #include <set>
+#include <sys/time.h>
 #include <SDL2/SDL.h>
 #include "draw.hpp"
 #include "logics.hpp"
+#include "font.hpp"
 
 const char * game_name = "Conway's Game of Life";
 const int screen_width = 640;
 const int screen_height = 480;
+const int border_size = 24;
 int pixel_size = 8, mx = -1, my = -1;
 bool quit_flag = false;
 bool button_set = false;
@@ -18,6 +22,8 @@ SDL_Event event;
 SDL_Texture * texture = NULL;
 
 std::set< std::pair< int, int > > draw;
+
+font_table_t * ft = NULL;
 
 void game_send_error( int code ) {
     printf( "[error]: %s\n", SDL_GetError() );
@@ -31,9 +37,9 @@ SDL_Texture * generate_wireframe_texture( void ) {
     SDL_RenderClear( render );
     set_color4u( 0xff, 0xff, 0xff, 0x64 );
     for ( size_t i = 0; i < screen_width; i += pixel_size ) {
-        SDL_RenderDrawLine( render, i, 0, i, screen_height );
+        SDL_RenderDrawLine( render, i, 0, i, screen_height - border_size );
     }
-    for ( size_t j = 0; j < screen_height; j += pixel_size ) {
+    for ( size_t j = 0; j < screen_height - border_size; j += pixel_size ) {
         SDL_RenderDrawLine( render, 0, j, screen_width, j );
     }
     set_color4u( 0xff, 0xff, 0xff, 0xff );
@@ -122,11 +128,35 @@ void game_event( SDL_Event *event ) {
     }
 }
 
+unsigned int get_ticks( void ) {
+    struct timeval tv;
+    gettimeofday( &tv, 0 );
+    return ( tv.tv_sec * 1000 + tv.tv_usec / 1000 );
+}
+
+float get_fps( void ) {
+    static float NewCount = 0.0f, LastCount = 0.0f, FpsRate = 0.0f;
+    static int FrameCount = 0;
+
+    NewCount = (float) get_ticks();
+    if ( ( NewCount - LastCount ) > 1000 ) {
+        FpsRate = ( FrameCount * 1000 ) / ( NewCount - LastCount );
+        LastCount = NewCount;
+        FrameCount = 0;
+    }
+    FrameCount++;
+    return FpsRate;
+}
+
 void game_loop( void ) {
     // insert code
 }
 
 void game_render( void ) {
+    const int BUFFER_SIZE = 128;
+    const wchar_t tmp[] = L"FPS: %.2f; count = %d; mouse = %d, %d";
+    wchar_t buffer[BUFFER_SIZE];
+
     SDL_RenderClear( render );
     SDL_RenderCopy( render, texture, NULL, NULL );
     set_coloru( COLOR_WHITE );
@@ -136,10 +166,13 @@ void game_render( void ) {
     set_coloru( COLOR_RED );
     draw_pixel_size( mx, my, pixel_size );
     set_coloru( COLOR_BLACK );
+    swprintf( buffer, BUFFER_SIZE, tmp, get_fps(), draw.size(), mx, my );
+    font_draw( render, ft, buffer, 5, screen_height - 16 );
     SDL_RenderPresent( render );
 }
 
 void game_destroy( void ) {
+    font_destroy( ft );
     draw.clear();
     SDL_DestroyTexture( texture );
     SDL_DestroyRenderer( render );
@@ -148,6 +181,7 @@ void game_destroy( void ) {
 }
 
 void game_init( void ) {
+    setlocale( LC_ALL, "" );
     SDL_Init( SDL_INIT_VIDEO | SDL_INIT_EVENTS );
     window = SDL_CreateWindow( game_name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                screen_width, screen_height, SDL_WINDOW_SHOWN );
@@ -162,6 +196,8 @@ void game_init( void ) {
     SDL_SetRenderDrawBlendMode( render, SDL_BLENDMODE_BLEND ); 
     draw_init( render );
     texture = generate_wireframe_texture();
+    font_load( render, &ft, "./data/font.cfg" );
+    font_coloru( ft, 0xFF7F27 );
 }
 
 int main( int argc, char * argv[] ) {

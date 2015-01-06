@@ -11,9 +11,22 @@ const char * game_name = "Conway's Game of Life";
 const int screen_width = 640;
 const int screen_height = 480;
 const int border_size = 24;
+const int help_box_width = 200;
+const int help_box_height = 80;
 int pixel_size = 8, mx = -1, my = -1, px = 0, py = 0;
 bool quit_flag = false;
 bool button_set = false;
+bool help_flag = false;
+
+const wchar_t help_info[] = 
+    L"help menu:\n\n"
+    L"  F1 -- this menu\n"
+    L" ESC -- quit\n"
+    L"LBLK -- set/clear\n"
+    L" WUP -- zoom in\n"
+    L"WDWN -- zoom out\n"
+    L"   R -- clear gamepole\n"
+    L"   > -- next generation";
 
 SDL_Window * window = NULL;
 SDL_Renderer * render = NULL;
@@ -101,9 +114,13 @@ void game_event( SDL_Event *event ) {
                 case SDLK_ESCAPE:
                     quit_flag = true;
                     break;
+                case SDLK_F1:
+                    help_flag = !help_flag;
+                    break;
                 default:
                     break;
             }
+            event->key.keysym.sym = 0;
             break;
         case SDL_MOUSEMOTION:
             mx = ( event->motion.x ) / pixel_size * pixel_size;
@@ -175,7 +192,7 @@ void game_loop( void ) {
 
 void game_render( void ) {
     const int BUFFER_SIZE = 128;
-    const wchar_t tmp[] = L"FPS: %.2f; count = %d; mouse = (%d, %d); (px, py) = (%d, %d)";
+    const wchar_t tmp[] = L"FPS: %.2f; count = %d; mouse = (%d, %d); (px, py) = (%d, %d); F1 -- help";
     wchar_t buffer[BUFFER_SIZE];
 
     SDL_RenderClear( render );
@@ -191,9 +208,14 @@ void game_render( void ) {
     }
     set_coloru( COLOR_RED );
     draw_pixel_size( mx, my, pixel_size );
-    set_coloru( COLOR_BLACK );
     swprintf( buffer, BUFFER_SIZE, tmp, get_fps(), draw.size(), mx, my, px, py );
     font_draw( render, ft, buffer, 5, screen_height - 16 );
+    if ( help_flag ) {
+        set_color4u( 0x00, 0x00, 0xff, 0x96 );
+        draw_rectangle_param( ( screen_width - help_box_width ) / 2, ( screen_height - help_box_height ) / 2, help_box_width, help_box_height, true );
+        font_draw( render, ft, help_info, ( screen_width - help_box_width ) / 2, ( screen_height - help_box_height ) / 2 + 4 );
+    }
+    set_coloru( COLOR_BLACK );
     SDL_RenderPresent( render );
 }
 
@@ -223,7 +245,6 @@ void game_init( void ) {
     draw_init( render );
     texture = generate_wireframe_texture();
     font_load( render, &ft, "./data/font.cfg" );
-    font_coloru( ft, 0xFF7F27 );
 }
 
 int main( int argc, char * argv[] ) {

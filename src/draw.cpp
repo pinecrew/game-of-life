@@ -13,14 +13,14 @@ void set_coloru( Uint32 color ) {
     g = ( ( color >> 8 ) & 0xff );
     b = ( color & 0xff );
     SDL_GetRenderDrawColor( _render, &ro, &go, &bo, &ao );
-    SDL_SetRenderDrawColor( _render, r, g, b, ao );
+    SDL_SetRenderDrawColor( _render, r, g, b, 0xff );
 }
 
 void set_color3u( Uint8 red, Uint8 green, Uint8 blue ) {
     Uint8 ro, go, bo, ao;
     
     SDL_GetRenderDrawColor( _render, &ro, &go, &bo, &ao );
-    SDL_SetRenderDrawColor( _render, red, green, blue, ao );
+    SDL_SetRenderDrawColor( _render, red, green, blue, 0xff );
 }
 
 void set_color4u( Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha ) {

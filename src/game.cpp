@@ -86,6 +86,8 @@ void gamepole_resize( int resize ) {
         return;
     }
     SDL_DestroyTexture( texture );
+    px = px * (pixel_size + resize) / pixel_size;
+    py = py * (pixel_size + resize) / pixel_size;
     pixel_size += resize;
     if ( pixel_size > 3 ) {
         texture = generate_wireframe_texture();

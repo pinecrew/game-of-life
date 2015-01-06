@@ -11,7 +11,7 @@ const char * game_name = "Conway's Game of Life";
 const int screen_width = 640;
 const int screen_height = 480;
 const int border_size = 24;
-int pixel_size = 8, mx = -1, my = -1;
+int pixel_size = 8, mx = -1, my = -1, px = 0, py = 0;
 bool quit_flag = false;
 bool button_set = false;
 
@@ -29,25 +29,32 @@ void game_send_error( int code ) {
     exit( code );
 }
 
-SDL_Texture * generate_wireframe_texture( void ) {
+SDL_Texture * generate_wireframe_texture( bool wireframe = true ) {
     SDL_Texture * texture = SDL_CreateTexture( render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 
                                                screen_width, screen_height );
     SDL_SetRenderTarget( render, texture );
     SDL_RenderClear( render );
-    set_color4u( 0xff, 0xff, 0xff, 0x64 );
-    for ( size_t i = 0; i < screen_width; i += pixel_size ) {
-        SDL_RenderDrawLine( render, i, 0, i, screen_height - border_size );
+    if ( wireframe ) {
+        set_color4u( 0xff, 0xff, 0xff, 0x64 );
+        for ( size_t i = 0; i < screen_width; i += pixel_size ) {
+            SDL_RenderDrawLine( render, i, 0, i, screen_height - border_size );
+        }
+        for ( size_t j = 0; j < screen_height - border_size; j += pixel_size ) {
+            SDL_RenderDrawLine( render, 0, j, screen_width, j );
+        }
     }
-    for ( size_t j = 0; j < screen_height - border_size; j += pixel_size ) {
-        SDL_RenderDrawLine( render, 0, j, screen_width, j );
-    }
+    set_color4u( 0x00, 0x00, 0xff, 0x32 );
+    draw_rectangle_param( 0, 0, screen_width, border_size, true );
+    draw_rectangle_param( 0, screen_height - border_size, screen_width, border_size, true );
+    draw_rectangle_param( 0, border_size, border_size, screen_height - 2 * border_size, true );
+    draw_rectangle_param( screen_width - border_size, border_size, border_size, screen_height - 2 * border_size, true );
     set_color4u( 0xff, 0xff, 0xff, 0xff );
     SDL_SetRenderTarget( render, NULL );
     return texture;
 }
 
 void set_point( int x, int y ) {
-    auto obj = std::pair< int, int >( x / pixel_size, y / pixel_size );
+    auto obj = std::pair< int, int >( x / pixel_size - px / pixel_size, y / pixel_size - py / pixel_size );
     auto it = draw.find( obj );
 
     if ( it != draw.end() ) {
@@ -58,14 +65,23 @@ void set_point( int x, int y ) {
 }
 
 void gamepole_resize( int resize ) {
-    SDL_DestroyTexture( texture );
-    if ( resize < 0 && pixel_size == 3 ) {
+    if ( resize < 0 && pixel_size == 1 ) {
         return;
     }
+    SDL_DestroyTexture( texture );
     pixel_size += resize;
     if ( pixel_size > 3 ) {
         texture = generate_wireframe_texture();
+    } else {
+        texture = generate_wireframe_texture( false );
     }
+}
+
+bool intersect( int param, int p1, int p2 ) {
+    if ( param >= p1 && param <= p2 ) {
+        return true;
+    }
+    return false;
 }
 
 void game_event( SDL_Event *event ) {
@@ -93,8 +109,20 @@ void game_event( SDL_Event *event ) {
             mx = ( event->motion.x ) / pixel_size * pixel_size;
             my = ( event->motion.y ) / pixel_size * pixel_size;
             if ( button_set ) {
-                draw.insert( std::pair< int, int >( ( event->motion.x ) / pixel_size,
-                                                    ( event->motion.y ) / pixel_size) );
+                draw.insert( std::pair< int, int >( ( event->motion.x ) / pixel_size - px / pixel_size,
+                                                    ( event->motion.y ) / pixel_size - py / pixel_size ) );
+            }
+            if ( intersect( event->motion.x, 0, border_size ) ) {
+                px += pixel_size;
+            } 
+            if ( intersect( event->motion.x, screen_width - border_size, screen_width ) ) {
+                px -= pixel_size;
+            }
+            if ( intersect( event->motion.y, 0, border_size ) ) {
+                py += pixel_size;
+            } 
+            if ( intersect( event->motion.y, screen_height - border_size, screen_height ) ) {
+                py -= pixel_size;
             }
             break;
         case SDL_MOUSEWHEEL:
@@ -147,19 +175,24 @@ void game_loop( void ) {
 
 void game_render( void ) {
     const int BUFFER_SIZE = 128;
-    const wchar_t tmp[] = L"FPS: %.2f; count = %d; mouse = %d, %d";
+    const wchar_t tmp[] = L"FPS: %.2f; count = %d; mouse = (%d, %d); (px, py) = (%d, %d)";
     wchar_t buffer[BUFFER_SIZE];
 
     SDL_RenderClear( render );
     SDL_RenderCopy( render, texture, NULL, NULL );
     set_coloru( COLOR_WHITE );
     for ( auto p = draw.begin(); p != draw.end(); p++ ) {
-        draw_pixel_size( p->first * pixel_size, p->second * pixel_size, pixel_size );
+        int xp = p->first * pixel_size + px;
+        int yp = p->second * pixel_size + py;
+        if ( !( intersect( xp, 0, border_size ) || intersect( xp, screen_width - border_size, screen_width ) ||
+             intersect( yp, 0, border_size ) || intersect( yp, screen_height - border_size, screen_height ) ) ) {
+            draw_pixel_size( xp, yp, pixel_size );
+        }
     }
     set_coloru( COLOR_RED );
     draw_pixel_size( mx, my, pixel_size );
     set_coloru( COLOR_BLACK );
-    swprintf( buffer, BUFFER_SIZE, tmp, get_fps(), draw.size(), mx, my );
+    swprintf( buffer, BUFFER_SIZE, tmp, get_fps(), draw.size(), mx, my, px, py );
     font_draw( render, ft, buffer, 5, screen_height - 16 );
     SDL_RenderPresent( render );
 }

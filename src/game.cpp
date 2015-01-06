@@ -83,7 +83,9 @@ SDL_Texture * generate_wireframe_texture( bool wireframe = true ) {
 }
 
 void set_point( int x, int y ) {
-    auto obj = std::pair< int, int >( x / pixel_size - px / pixel_size, y / pixel_size - py / pixel_size );
+    auto obj = std::pair< int, int >(
+            floor( (double)( x - px ) / pixel_size ),
+            floor( (double)( y - py ) / pixel_size ));
     auto it = draw.find( obj );
 
     if ( it != draw.end() ) {
@@ -146,12 +148,12 @@ void game_event( SDL_Event *event ) {
                 case SDLK_DOWN:
                     py -= pixel_size;
                     break;
-                case SDLK_COMMA:
+                case SDLK_PERIOD:
                     if ( MAX_COUNT > 0 ) {
                         MAX_COUNT -= 1;
                     }
                     break;
-                case SDLK_PERIOD:
+                case SDLK_COMMA:
                     MAX_COUNT += 1;
                     break;
                 case SDLK_r:
@@ -169,11 +171,12 @@ void game_event( SDL_Event *event ) {
             event->key.keysym.sym = 0; // dirty hack
             break;
         case SDL_MOUSEMOTION:
-            mx = ( event->motion.x ) / pixel_size * pixel_size;
-            my = ( event->motion.y ) / pixel_size * pixel_size;
+            mx = ( event->motion.x - MOD(px, pixel_size) ) / pixel_size * pixel_size
+                + MOD(px, pixel_size);
+            my = ( event->motion.y - MOD(py, pixel_size) ) / pixel_size * pixel_size
+                + MOD(py, pixel_size);
             if ( button_set ) {
-                draw.insert( std::pair< int, int >( ( event->motion.x ) / pixel_size - px / pixel_size,
-                                                    ( event->motion.y ) / pixel_size - py / pixel_size ) );
+                set_point( event->motion.x, event->motion.y );
             }
             /* сдвиг области отрисовки при попаданию в border мыши */
             if ( intersect( event->motion.x, 0, border_size ) ) {
@@ -257,7 +260,7 @@ void game_render( void ) {
         }
     }
     set_coloru( COLOR_RED );
-    draw_pixel_size( mx, my, pixel_size );
+    draw_pixel_size( mx+1, my+1, pixel_size-1 );
     swprintf( buffer, BUFFER_SIZE, tmp, game_status[int(game_step)], get_fps(), draw.size(), 
               mx, my, px, py, MAX_COUNT );
     font_draw( render, ft, buffer, 5, screen_height - 16 );

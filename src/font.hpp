@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdio>
 #include <string.h>
 #include <wchar.h>
 #include <SDL2/SDL.h>

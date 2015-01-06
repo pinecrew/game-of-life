@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <locale>
 #include <set>
-#include <sys/time.h>
 #include <SDL2/SDL.h>
 #include "draw.hpp"
 #include "logics.hpp"
@@ -128,19 +127,13 @@ void game_event( SDL_Event *event ) {
     }
 }
 
-unsigned int get_ticks( void ) {
-    struct timeval tv;
-    gettimeofday( &tv, 0 );
-    return ( tv.tv_sec * 1000 + tv.tv_usec / 1000 );
-}
-
 float get_fps( void ) {
     static float NewCount = 0.0f, LastCount = 0.0f, FpsRate = 0.0f;
     static int FrameCount = 0;
 
-    NewCount = (float) get_ticks();
-    if ( ( NewCount - LastCount ) > 1000 ) {
-        FpsRate = ( FrameCount * 1000 ) / ( NewCount - LastCount );
+    NewCount = (float) SDL_GetTicks();
+    if ( ( NewCount - LastCount ) > 1000.0f ) {
+        FpsRate = ( FrameCount * 1000.0f ) / ( NewCount - LastCount );
         LastCount = NewCount;
         FrameCount = 0;
     }

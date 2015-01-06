@@ -13,13 +13,19 @@ const char * game_name = "Conway's Game of Life";
 const int screen_width = 640;
 const int screen_height = 480;
 const int border_size = 24;
-const int help_box_width = 200;
-const int help_box_height = 120;
+const int help_box_width = 210;
+const int help_box_height = 140;
+int game_counter = 0, MAX_COUNT = 5;
 int pixel_size = 8, mx = -1, my = -1, px = 0, py = 0;
 bool quit_flag = false;
 bool button_set = false;
 bool help_flag = false;
+bool game_step = false;
 
+const wchar_t * game_status[] = {
+    (const wchar_t *) "pause",
+    (const wchar_t *) "play"
+};
 const wchar_t help_info[] =
     L"help menu:\n\n"
     L"   F1 -- this menu\n"
@@ -32,7 +38,10 @@ const wchar_t help_info[] =
     L" LEFT -- move left\n"
     L"RIGHT -- move right\n"
     L"   UP -- move up\n"
-    L" DOWN -- move down";
+    L" DOWN -- move down\n"
+    L"    > -- speed up\n"
+    L"    < -- speed down";
+const wchar_t tmp[] = L"(%s) FPS: %.2f; count %d; mouse (%d, %d); (px, py) (%d, %d); delay %d";
 
 SDL_Window * window = NULL;
 SDL_Renderer * render = NULL;
@@ -66,7 +75,8 @@ SDL_Texture * generate_wireframe_texture( bool wireframe = true ) {
     draw_rectangle_param( 0, 0, screen_width, border_size, true );
     draw_rectangle_param( 0, screen_height - border_size, screen_width, border_size, true );
     draw_rectangle_param( 0, border_size, border_size, screen_height - 2 * border_size, true );
-    draw_rectangle_param( screen_width - border_size, border_size, border_size, screen_height - 2 * border_size, true );
+    draw_rectangle_param( screen_width - border_size, border_size, border_size, 
+                          screen_height - 2 * border_size, true );
     set_color4u( 0xff, 0xff, 0xff, 0xff );
     SDL_SetRenderTarget( render, NULL );
     return texture;
@@ -122,7 +132,7 @@ void game_event( SDL_Event *event ) {
         case SDL_KEYDOWN:
             switch ( event->key.keysym.sym ) {
                 case SDLK_SPACE:
-                    nextStep(draw);
+                    game_step = !game_step;
                     break;
                 case SDLK_LEFT:
                     px += pixel_size;
@@ -136,6 +146,14 @@ void game_event( SDL_Event *event ) {
                 case SDLK_DOWN:
                     py -= pixel_size;
                     break;
+                case SDLK_COMMA:
+                    if ( MAX_COUNT > 0 ) {
+                        MAX_COUNT -= 1;
+                    }
+                    break;
+                case SDLK_PERIOD:
+                    MAX_COUNT += 1;
+                    break;
                 case SDLK_r:
                     draw.clear();
                     break;
@@ -148,7 +166,7 @@ void game_event( SDL_Event *event ) {
                 default:
                     break;
             }
-            event->key.keysym.sym = 0;
+            event->key.keysym.sym = 0; // dirty hack
             break;
         case SDL_MOUSEMOTION:
             mx = ( event->motion.x ) / pixel_size * pixel_size;
@@ -157,6 +175,7 @@ void game_event( SDL_Event *event ) {
                 draw.insert( std::pair< int, int >( ( event->motion.x ) / pixel_size - px / pixel_size,
                                                     ( event->motion.y ) / pixel_size - py / pixel_size ) );
             }
+            /* сдвиг области отрисовки при попаданию в border мыши */
             if ( intersect( event->motion.x, 0, border_size ) ) {
                 px += pixel_size;
             }
@@ -215,12 +234,16 @@ float get_fps( void ) {
 }
 
 void game_loop( void ) {
-    // insert code
+    if ( game_step && game_counter >= MAX_COUNT ) {
+        nextStep( draw );
+        game_counter = 0;
+    } else {
+        game_counter++;
+    }
 }
 
 void game_render( void ) {
     const int BUFFER_SIZE = 128;
-    const wchar_t tmp[] = L"FPS: %.2f; count = %d; mouse = (%d, %d); (px, py) = (%d, %d); F1 -- help";
     wchar_t buffer[BUFFER_SIZE];
 
     SDL_RenderClear( render );
@@ -235,12 +258,16 @@ void game_render( void ) {
     }
     set_coloru( COLOR_RED );
     draw_pixel_size( mx, my, pixel_size );
-    swprintf( buffer, BUFFER_SIZE, tmp, get_fps(), draw.size(), mx, my, px, py );
+    swprintf( buffer, BUFFER_SIZE, tmp, game_status[int(game_step)], get_fps(), draw.size(), 
+              mx, my, px, py, MAX_COUNT );
     font_draw( render, ft, buffer, 5, screen_height - 16 );
     if ( help_flag ) {
         set_color4u( 0x00, 0x00, 0xff, 0x96 );
-        draw_rectangle_param( ( screen_width - help_box_width ) / 2, ( screen_height - help_box_height ) / 2, help_box_width, help_box_height, true );
-        font_draw( render, ft, help_info, ( screen_width - help_box_width ) / 2, ( screen_height - help_box_height ) / 2 + 4 );
+        draw_rectangle_param( ( screen_width - help_box_width ) / 2, 
+                              ( screen_height - help_box_height ) / 2, 
+                              help_box_width, help_box_height, true );
+        font_draw( render, ft, help_info, ( screen_width - help_box_width ) / 2, 
+                   ( screen_height - help_box_height ) / 2 + 4 );
     }
     set_coloru( COLOR_BLACK );
     SDL_RenderPresent( render );

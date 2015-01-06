@@ -12,21 +12,25 @@ const int screen_width = 640;
 const int screen_height = 480;
 const int border_size = 24;
 const int help_box_width = 200;
-const int help_box_height = 80;
+const int help_box_height = 120;
 int pixel_size = 8, mx = -1, my = -1, px = 0, py = 0;
 bool quit_flag = false;
 bool button_set = false;
 bool help_flag = false;
 
-const wchar_t help_info[] = 
+const wchar_t help_info[] =
     L"help menu:\n\n"
-    L"  F1 -- this menu\n"
-    L" ESC -- quit\n"
-    L"LBLK -- set/clear\n"
-    L" WUP -- zoom in\n"
-    L"WDWN -- zoom out\n"
-    L"   R -- clear gamepole\n"
-    L"   > -- next generation";
+    L"   F1 -- this menu\n"
+    L"  ESC -- quit\n"
+    L" LBLK -- set/clear\n"
+    L"  WUP -- zoom in\n"
+    L" WDWN -- zoom out\n"
+    L"    R -- clear gamepole\n"
+    L"SPACE -- next generation\n"
+    L" LEFT -- move left\n"
+    L"RIGHT -- move right\n"
+    L"   UP -- move up\n"
+    L" DOWN -- move down";
 
 SDL_Window * window = NULL;
 SDL_Renderer * render = NULL;
@@ -43,7 +47,7 @@ void game_send_error( int code ) {
 }
 
 SDL_Texture * generate_wireframe_texture( bool wireframe = true ) {
-    SDL_Texture * texture = SDL_CreateTexture( render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 
+    SDL_Texture * texture = SDL_CreateTexture( render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
                                                screen_width, screen_height );
     SDL_SetRenderTarget( render, texture );
     SDL_RenderClear( render );
@@ -105,8 +109,20 @@ void game_event( SDL_Event *event ) {
             break;
         case SDL_KEYDOWN:
             switch ( event->key.keysym.sym ) {
-                case SDLK_RIGHT:
+                case SDLK_SPACE:
                     nextStep(draw);
+                    break;
+                case SDLK_LEFT:
+                    px += pixel_size;
+                    break;
+                case SDLK_RIGHT:
+                    px -= pixel_size;
+                    break;
+                case SDLK_UP:
+                    py += pixel_size;
+                    break;
+                case SDLK_DOWN:
+                    py -= pixel_size;
                     break;
                 case SDLK_r:
                     draw.clear();
@@ -131,13 +147,13 @@ void game_event( SDL_Event *event ) {
             }
             if ( intersect( event->motion.x, 0, border_size ) ) {
                 px += pixel_size;
-            } 
+            }
             if ( intersect( event->motion.x, screen_width - border_size, screen_width ) ) {
                 px -= pixel_size;
             }
             if ( intersect( event->motion.y, 0, border_size ) ) {
                 py += pixel_size;
-            } 
+            }
             if ( intersect( event->motion.y, screen_height - border_size, screen_height ) ) {
                 py -= pixel_size;
             }
@@ -235,12 +251,12 @@ void game_init( void ) {
     if ( window == NULL ) {
         game_send_error( EXIT_FAILURE );
     }
-    render = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | 
+    render = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC |
                                  SDL_RENDERER_TARGETTEXTURE );
     if ( render == NULL ) {
         game_send_error( EXIT_FAILURE );
     }
-    SDL_SetRenderDrawBlendMode( render, SDL_BLENDMODE_BLEND ); 
+    SDL_SetRenderDrawBlendMode( render, SDL_BLENDMODE_BLEND );
     draw_init( render );
     texture = generate_wireframe_texture();
     font_load( render, &ft, "./data/font.cfg" );

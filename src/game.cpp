@@ -201,8 +201,7 @@ void game_render( void ) {
     for ( auto p = draw.begin(); p != draw.end(); p++ ) {
         int xp = p->first * pixel_size + px;
         int yp = p->second * pixel_size + py;
-        if ( !( intersect( xp, 0, border_size ) || intersect( xp, screen_width - border_size, screen_width ) ||
-             intersect( yp, 0, border_size ) || intersect( yp, screen_height - border_size, screen_height ) ) ) {
+        if ( !( intersect( yp, screen_height - border_size, screen_height ) ) ) {
             draw_pixel_size( xp, yp, pixel_size );
         }
     }

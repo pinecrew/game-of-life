@@ -7,6 +7,8 @@
 #include "logics.hpp"
 #include "font.hpp"
 
+#define MOD(x, y) (((x) % (y) + (y)) % (y))
+
 const char * game_name = "Conway's Game of Life";
 const int screen_width = 640;
 const int screen_height = 480;
@@ -53,10 +55,10 @@ SDL_Texture * generate_wireframe_texture( bool wireframe = true ) {
     SDL_RenderClear( render );
     if ( wireframe ) {
         set_color4u( 0xff, 0xff, 0xff, 0x64 );
-        for ( size_t i = 0; i < screen_width; i += pixel_size ) {
+        for ( size_t i = MOD(px, pixel_size); i < screen_width; i += pixel_size ) {
             SDL_RenderDrawLine( render, i, 0, i, screen_height - border_size );
         }
-        for ( size_t j = 0; j < screen_height - border_size; j += pixel_size ) {
+        for ( size_t j = MOD(py, pixel_size); j < screen_height - border_size; j += pixel_size ) {
             SDL_RenderDrawLine( render, 0, j, screen_width, j );
         }
     }
@@ -86,14 +88,22 @@ void gamepole_resize( int resize ) {
         return;
     }
     SDL_DestroyTexture( texture );
-    px = px * (pixel_size + resize) / pixel_size;
-    py = py * (pixel_size + resize) / pixel_size;
+
+    /* магия для увеличения относительно центра экрана */
+    px -= screen_width / 2 / pixel_size * pixel_size;
+    py -= screen_height / 2 / pixel_size * pixel_size;
+
+    /* увеличение сдвигов соразмерно сетке */
+    px = px * ( pixel_size + resize ) / pixel_size; // я специально
+    py = py * ( pixel_size + resize ) / pixel_size; // не использовал *=
+
+    /* продолжение магии для увеличения относительно центра экрана */
+    px += screen_width / 2 / pixel_size * pixel_size;
+    py += screen_height / 2 / pixel_size * pixel_size;
+
+
     pixel_size += resize;
-    if ( pixel_size > 3 ) {
-        texture = generate_wireframe_texture();
-    } else {
-        texture = generate_wireframe_texture( false );
-    }
+    texture = generate_wireframe_texture( pixel_size > 3 );
 }
 
 bool intersect( int param, int p1, int p2 ) {

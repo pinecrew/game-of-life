@@ -24,13 +24,16 @@ struct font_table {
 };
 typedef struct font_table font_table_t;
 
-struct token {
-    char ** name;
-    unsigned int size;
-};
-typedef struct token token_t;
-
 int font_load( SDL_Renderer * r, font_table_t ** t, const char * font );
 void font_draw( SDL_Renderer * r, font_table_t * t, const wchar_t * text, int x, int y );
 void font_destroy( font_table_t * t );
 void font_coloru( font_table_t * t, Uint32 color );
+
+// структура файла конфигурации
+// заголовок:
+//     unsigned int size;
+//     char * filename[size];
+//     int width;
+//     int height;
+// размер заголовка = sizeof(int) * 3 + size + 1;
+// далее алфавит до конца файла в формате UTF-8

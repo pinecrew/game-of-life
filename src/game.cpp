@@ -134,16 +134,16 @@ void game_event( SDL_Event *event ) {
                     game_step = !game_step;
                     break;
                 case SDLK_LEFT:
-                    px += pixel_size;
-                    break;
-                case SDLK_RIGHT:
                     px -= pixel_size;
                     break;
+                case SDLK_RIGHT:
+                    px += pixel_size;
+                    break;
                 case SDLK_UP:
-                    py += pixel_size;
+                    py -= pixel_size;
                     break;
                 case SDLK_DOWN:
-                    py -= pixel_size;
+                    py += pixel_size;
                     break;
                 case SDLK_PERIOD:
                     if ( MAX_COUNT > 0 ) {

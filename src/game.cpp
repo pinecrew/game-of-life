@@ -42,7 +42,7 @@ const wchar_t help_info[] =
     L" DOWN -- move down\n"
     L"    > -- speed up\n"
     L"    < -- speed down";
-const wchar_t tmp[] = L"(%s) FPS: %.2f; count %d; mouse (%d, %d); (px, py) (%d, %d); delay %d";
+const wchar_t tmp[] = L"(%s) FPS: %.2f; count %d; id (%d, %d); shift (%d, %d); delay %d";
 
 SDL_Window * window = NULL;
 SDL_Renderer * render = NULL;

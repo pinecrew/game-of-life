@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <locale>
-#include <set>
 #include <cmath>
 #include <SDL2/SDL.h>
 #include "draw.hpp"
@@ -49,7 +48,7 @@ SDL_Renderer * render = NULL;
 SDL_Event event;
 SDL_Texture * texture = NULL;
 
-std::set< std::pair< int, int > > draw;
+cells draw;
 
 font_table_t * ft = NULL;
 
@@ -76,7 +75,7 @@ SDL_Texture * generate_wireframe_texture( bool wireframe = true ) {
     draw_rectangle_param( 0, 0, screen_width, border_size, true );
     draw_rectangle_param( 0, screen_height - border_size, screen_width, border_size, true );
     draw_rectangle_param( 0, border_size, border_size, screen_height - 2 * border_size, true );
-    draw_rectangle_param( screen_width - border_size, border_size, border_size, 
+    draw_rectangle_param( screen_width - border_size, border_size, border_size,
                           screen_height - 2 * border_size, true );
     set_color4u( 0xff, 0xff, 0xff, 0xff );
     SDL_SetRenderTarget( render, NULL );
@@ -84,7 +83,7 @@ SDL_Texture * generate_wireframe_texture( bool wireframe = true ) {
 }
 
 void set_point( int x, int y, bool auto_erase ) {
-    auto obj = std::pair< int, int >(
+    auto obj = cell(
             floor( (double)( x - px ) / pixel_size ),
             floor( (double)( y - py ) / pixel_size ));
     auto it = draw.find( obj );
@@ -253,24 +252,24 @@ void game_render( void ) {
     SDL_RenderClear( render );
     SDL_RenderCopy( render, texture, NULL, NULL );
     set_coloru( COLOR_WHITE );
-    for ( auto p = draw.begin(); p != draw.end(); p++ ) {
-        int xp = p->first * pixel_size + px;
-        int yp = p->second * pixel_size + py;
+    for ( auto p: draw ) {
+        int xp = p.first * pixel_size + px;
+        int yp = p.second * pixel_size + py;
         if ( !( intersect( yp, screen_height - border_size, screen_height ) ) ) {
-            draw_pixel_size( xp, yp, pixel_size );
+            draw_pixel_size( point(xp, yp), pixel_size );
         }
     }
     set_coloru( COLOR_RED );
-    draw_pixel_size( mx+1, my+1, pixel_size-1 );
-    swprintf( buffer, BUFFER_SIZE, tmp, game_status[int(game_step)], get_fps(), draw.size(), 
+    draw_pixel_size( point(mx+1, my+1), pixel_size-1 );
+    swprintf( buffer, BUFFER_SIZE, tmp, game_status[int(game_step)], get_fps(), draw.size(),
               mx, my, px, py, MAX_COUNT );
     font_draw( render, ft, buffer, 5, screen_height - 16 );
     if ( help_flag ) {
         set_color4u( 0x00, 0x00, 0xff, 0x96 );
-        draw_rectangle_param( ( screen_width - help_box_width ) / 2, 
-                              ( screen_height - help_box_height ) / 2, 
+        draw_rectangle_param( ( screen_width - help_box_width ) / 2,
+                              ( screen_height - help_box_height ) / 2,
                               help_box_width, help_box_height, true );
-        font_draw( render, ft, help_info, ( screen_width - help_box_width ) / 2, 
+        font_draw( render, ft, help_info, ( screen_width - help_box_width ) / 2,
                    ( screen_height - help_box_height ) / 2 + 4 );
     }
     set_coloru( COLOR_BLACK );

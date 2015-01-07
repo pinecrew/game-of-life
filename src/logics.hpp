@@ -2,5 +2,6 @@
 #include <set>
 
 using namespace std;
-
-void nextStep(set< pair< int, int > >&);
+typedef pair< int, int > cell;
+typedef set< cell > cells;
+void nextStep(cells&);

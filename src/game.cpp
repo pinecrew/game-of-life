@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <locale>
 #include <set>
+#include <cmath>
 #include <SDL2/SDL.h>
 #include "draw.hpp"
 #include "logics.hpp"
@@ -14,7 +15,7 @@ const int screen_width = 640;
 const int screen_height = 480;
 const int border_size = 24;
 const int help_box_width = 210;
-const int help_box_height = 140;
+const int help_box_height = 130;
 int game_counter = 0, MAX_COUNT = 5;
 int pixel_size = 8, mx = -1, my = -1, px = 0, py = 0;
 bool quit_flag = false;
@@ -82,13 +83,13 @@ SDL_Texture * generate_wireframe_texture( bool wireframe = true ) {
     return texture;
 }
 
-void set_point( int x, int y ) {
+void set_point( int x, int y, bool auto_erase ) {
     auto obj = std::pair< int, int >(
             floor( (double)( x - px ) / pixel_size ),
             floor( (double)( y - py ) / pixel_size ));
     auto it = draw.find( obj );
 
-    if ( it != draw.end() ) {
+    if ( it != draw.end() && auto_erase ) {
         draw.erase( it );
     } else {
         draw.insert( obj );
@@ -176,7 +177,7 @@ void game_event( SDL_Event *event ) {
             my = ( event->motion.y - MOD(py, pixel_size) ) / pixel_size * pixel_size
                 + MOD(py, pixel_size);
             if ( button_set ) {
-                set_point( event->motion.x, event->motion.y );
+                set_point( event->motion.x, event->motion.y, false );
             }
             /* сдвиг области отрисовки при попаданию в border мыши */
             if ( intersect( event->motion.x, 0, border_size ) ) {
@@ -206,7 +207,7 @@ void game_event( SDL_Event *event ) {
             switch ( event->button.button ) {
                 case SDL_BUTTON_LEFT:
                     if ( button_set == false ) {
-                        set_point( event->button.x, event->button.y );
+                        set_point( event->button.x, event->button.y, true );
                     }
                     break;
                 default:

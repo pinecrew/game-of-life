@@ -3,35 +3,37 @@
 const char NULL_STR = '\0';
 
 int font_load( SDL_Renderer * r, font_table_t ** t, const char * font ) {
-    unsigned int text_size = 0;
+    unsigned int text_size = 0, abc_size = 0;
     SDL_Texture *tex = NULL;
     font_table_t *a = NULL;
-    size_t load = 1, i = 0;
     wint_t current = 0;
     char * text_name;
+    size_t load = 1;
     int id = 0;
     FILE * f;
 
-    a = (font_table_t *) calloc( 1, sizeof( font_table_t ) );
+    a = new font_table_t;
     *t = a;
     f = fopen( font, "rb" );
     if ( f == NULL ) {
         return A_ERROR_OPEN_FILE;
     }
     fread( &( text_size ), sizeof(int), 1, f );
-    text_name = (char *) malloc( text_size * sizeof(char) );
+    fread( &( abc_size ), sizeof(int), 1, f );
+    text_name = new char [text_size];
+    a->table = new int [abc_size];
     fread( text_name, text_size, 1, f );
     fread( &( a->t_width ), sizeof(int), 1, f );
     fread( &( a->t_height ), sizeof(int), 1, f );
     tex = IMG_LoadTexture( r, text_name );
-    free( text_name );
+    delete[] text_name;
     a->font = tex;
     if ( tex == NULL ) {
         fclose( f );
         return A_ERROR_LOAD_TEXTURE;
     }
     SDL_QueryTexture( tex, NULL, NULL, &( a->f_width ), &( a->f_height ) );
-    fseek( f, sizeof(int) * 3 + text_size + 1, SEEK_SET );
+    fseek( f, sizeof(int) * 4 + text_size + 1, SEEK_SET );
     do {
         load = fread( &current, 2, 1, f );
         if ( current != L'\n' && current < 0xFFFF && load != 0 ) {
@@ -78,7 +80,8 @@ void font_draw( SDL_Renderer * r, font_table_t * t, const wchar_t * text, int x,
 
 void font_destroy( font_table_t * t ) {
     SDL_DestroyTexture( t->font );
-    free( t );
+    delete[] t->table;
+    delete t;
 }
 
 void font_coloru( font_table_t * t, Uint32 color ) {

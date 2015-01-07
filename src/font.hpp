@@ -1,11 +1,9 @@
 #pragma once
 #include <cstdio>
-#include <string.h>
+#include <cstring>
 #include <wchar.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-
-const int ABC_SIZE = 0x468;
 
 enum font_error {
     A_NULL_OBJECT = 0,
@@ -19,7 +17,7 @@ struct font_table {
     int f_width;
     int t_height;
     int t_width;
-    int table[ABC_SIZE];
+    int * table;
     SDL_Texture * font;
 };
 typedef struct font_table font_table_t;
@@ -32,8 +30,9 @@ void font_coloru( font_table_t * t, Uint32 color );
 // структура файла конфигурации
 // заголовок:
 //     unsigned int size;
+//     unsigned int abc_size;
 //     char * filename[size];
 //     int width;
 //     int height;
-// размер заголовка = sizeof(int) * 3 + size + 1;
+// размер заголовка = sizeof(int) * 4 + size + 1;
 // далее алфавит до конца файла в формате UTF-8

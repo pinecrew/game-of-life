@@ -15,13 +15,20 @@ const int screen_height = 480;
 const int border_size = 24;
 const int help_box_width = 210;
 const int help_box_height = 130;
-int game_counter = 0, MAX_COUNT = 5;
 int pixel_size = 8, mx = -1, my = -1, px = 0, py = 0;
+int game_counter = 0, MAX_COUNT = 5;
 bool quit_flag = false;
 bool button_set = false;
 bool help_flag = false;
 bool game_step = false;
+SDL_Window * window = NULL;
+SDL_Renderer * render = NULL;
+SDL_Texture * texture = NULL;
+SDL_Event event;
+font_table_t * ft = NULL;
+cells draw;
 
+const wchar_t tmp[] = L"(%s) FPS: %.2f; count %d; id (%d, %d); shift (%d, %d); delay %d";
 const wchar_t * game_status[] = {
     (const wchar_t *) "pause",
     (const wchar_t *) "play"
@@ -41,16 +48,6 @@ const wchar_t help_info[] =
     L" DOWN -- move down\n"
     L"    > -- speed up\n"
     L"    < -- speed down";
-const wchar_t tmp[] = L"(%s) FPS: %.2f; count %d; id (%d, %d); shift (%d, %d); delay %d";
-
-SDL_Window * window = NULL;
-SDL_Renderer * render = NULL;
-SDL_Event event;
-SDL_Texture * texture = NULL;
-
-cells draw;
-
-font_table_t * ft = NULL;
 
 void game_send_error( int code ) {
     printf( "[error]: %s\n", SDL_GetError() );
@@ -286,7 +283,7 @@ void game_destroy( void ) {
 }
 
 void game_init( void ) {
-    setlocale( LC_ALL, "" );
+    setlocale( LC_CTYPE, "" );
     SDL_Init( SDL_INIT_VIDEO | SDL_INIT_EVENTS );
     window = SDL_CreateWindow( game_name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                screen_width, screen_height, SDL_WINDOW_SHOWN );

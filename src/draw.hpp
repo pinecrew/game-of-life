@@ -1,5 +1,6 @@
 #pragma once
 #include <SDL2/SDL.h>
+#include <utility>
 
 enum {
     COLOR_WHITE     = 0xffffff,
@@ -10,9 +11,12 @@ enum {
     COLOR_YELLOW    = 0xffff00, 
 };
 
+using namespace std;
+typedef pair< int, int > point;
+
 void draw_init( SDL_Renderer * render );
 void set_coloru( Uint32 color );
 void set_color3u( Uint8 red, Uint8 green, Uint8 blue );
 void set_color4u( Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha );
 void draw_rectangle_param( int x, int y, int w, int h, bool fill );
-void draw_pixel_size( int x, int y, int size );
+void draw_pixel_size( point, int size );

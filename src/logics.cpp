@@ -1,6 +1,6 @@
 #include "logics.hpp"
 
-bool check_neighbours(set< pair< int, int > >& alive, pair< int, int > x){
+bool check_neighbours(cells alive, cell x){
     int count = 0;
     bool empty = (alive.find(x) == alive.end());
     x.first += 1;
@@ -22,7 +22,7 @@ bool check_neighbours(set< pair< int, int > >& alive, pair< int, int > x){
     return (count == 2 && !empty) || (count == 3);
 }
 
-void nextStep(set< pair< int, int > >& alive){
+void nextStep(cells& alive){
 /*
     весьма и весьма наивный способ расчитать следующее состояние
 
@@ -33,9 +33,9 @@ void nextStep(set< pair< int, int > >& alive){
     посчитать число соседей, и в соответствии с правилами, изменить
     её состояние
 */
-    set< pair< int, int > > next;
-    for(auto i = alive.begin(); i != alive.end(); i++) {
-        auto e = *i;
+    cells next;
+    for(auto i: alive) {
+        auto e = i;
         if (check_neighbours(alive, e)) next.insert( e );
         e.first += 1;
         if (check_neighbours(alive, e)) next.insert( e );

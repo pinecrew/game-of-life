@@ -41,6 +41,6 @@ void draw_rectangle_param( int x, int y, int w, int h, bool fill ) {
     }
 }
 
-void draw_pixel_size( int x, int y, int size ) {
-    draw_rectangle_param( x, y, size, size, true );
+void draw_pixel_size( point p, int size ) {
+    draw_rectangle_param( p.first, p.second, size, size, true );
 }

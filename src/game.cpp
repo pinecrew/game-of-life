@@ -45,6 +45,7 @@ const int screen_height = 480;
 const int border_size = 24;
 const int help_box_width = 210;
 const int help_box_height = 130;
+const int min_pixel_size = 3;
 int pixel_size = 8;
 point center = { screen_width / 2, screen_height / 2 }; // центр видимой области
 point mouse = center;     // позиция курсора
@@ -87,19 +88,17 @@ void game_send_error( int code ) {
     exit( code );
 }
 
-SDL_Texture * generate_wireframe_texture( bool wireframe = true ) {
+SDL_Texture * generate_wireframe_texture( void ) {
     SDL_Texture * texture = SDL_CreateTexture( render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
                                                screen_width, screen_height );
     SDL_SetRenderTarget( render, texture );
     SDL_RenderClear( render );
-    if ( wireframe ) {
-        set_color4u( 0xff, 0xff, 0xff, 0x64 );
-        for ( size_t i = MOD( origin.first, pixel_size); i < screen_width; i += pixel_size ) {
-            SDL_RenderDrawLine( render, i, 0, i, screen_height - border_size );
-        }
-        for ( size_t j = MOD( origin.second, pixel_size); j < screen_height - border_size; j += pixel_size ) {
-            SDL_RenderDrawLine( render, 0, j, screen_width, j );
-        }
+    set_color4u( 0xff, 0xff, 0xff, 0x64 );
+    for ( size_t i = MOD( origin.first, pixel_size); i < screen_width; i += pixel_size ) {
+        SDL_RenderDrawLine( render, i, 0, i, screen_height - border_size );
+    }
+    for ( size_t j = MOD( origin.second, pixel_size); j < screen_height - border_size; j += pixel_size ) {
+        SDL_RenderDrawLine( render, 0, j, screen_width, j );
     }
     set_color4u( 0x00, 0x00, 0xff, 0x32 );
     draw_rectangle_param( 0, 0, screen_width, border_size, true );
@@ -125,14 +124,14 @@ void set_point( point p, bool auto_erase ) {
 }
 
 void gamepole_resize( int resize ) {
-    if ( resize < 0 && pixel_size == 1 ) {
+    if ( resize < 0 && pixel_size == min_pixel_size ) {
         return;
     }
     SDL_DestroyTexture( texture );
 
     origin = mouse + (origin - mouse) * (pixel_size + resize) / pixel_size;
     pixel_size += resize;
-    texture = generate_wireframe_texture( pixel_size > 3 );
+    texture = generate_wireframe_texture();
 }
 
 void gamepole_shift( int x, int y ) {

@@ -9,13 +9,46 @@
 
 #define MOD(x, y) (((x) % (y) + (y)) % (y))
 
+pair< int, int > operator+(pair< int, int > lhs, pair< int, int > rhs)
+{
+    return { lhs.first + rhs.first, lhs.second + rhs.second };
+}
+
+pair< int, int > operator+(pair< int, int > lhs, int rhs)
+{
+    return { lhs.first + rhs, lhs.second + rhs };
+}
+
+pair< int, int > operator-(pair< int, int > lhs, pair< int, int > rhs)
+{
+    return { lhs.first - rhs.first, lhs.second - rhs.second };
+}
+
+pair< int, int > operator*(pair< int, int > lhs, int rhs)
+{
+    return { lhs.first * rhs, lhs.second * rhs };
+}
+
+pair< int, int > operator/(pair< int, int > lhs, int rhs)
+{
+    return { lhs.first / rhs, lhs.second / rhs };
+}
+
+pair< int, int > operator%(pair< int, int > lhs, int rhs)
+{
+    return { lhs.first % rhs, lhs.second % rhs };
+}
+
 const char * game_name = "Conway's Game of Life";
 const int screen_width = 640;
 const int screen_height = 480;
 const int border_size = 24;
 const int help_box_width = 210;
 const int help_box_height = 130;
-int pixel_size = 8, mx = -1, my = -1, px = 0, py = 0;
+int pixel_size = 8;
+point center = { screen_width / 2, screen_height / 2 }; // центр видимой области
+point mouse = center;     // позиция курсора
+point origin = center; // позиция начала координат относительно верххнего левого края
 int game_counter = 0, MAX_COUNT = 5;
 bool quit_flag = false;
 bool button_set = false;
@@ -61,10 +94,10 @@ SDL_Texture * generate_wireframe_texture( bool wireframe = true ) {
     SDL_RenderClear( render );
     if ( wireframe ) {
         set_color4u( 0xff, 0xff, 0xff, 0x64 );
-        for ( size_t i = MOD(px, pixel_size); i < screen_width; i += pixel_size ) {
+        for ( size_t i = MOD( origin.first, pixel_size); i < screen_width; i += pixel_size ) {
             SDL_RenderDrawLine( render, i, 0, i, screen_height - border_size );
         }
-        for ( size_t j = MOD(py, pixel_size); j < screen_height - border_size; j += pixel_size ) {
+        for ( size_t j = MOD( origin.second, pixel_size); j < screen_height - border_size; j += pixel_size ) {
             SDL_RenderDrawLine( render, 0, j, screen_width, j );
         }
     }
@@ -79,17 +112,16 @@ SDL_Texture * generate_wireframe_texture( bool wireframe = true ) {
     return texture;
 }
 
-void set_point( int x, int y, bool auto_erase ) {
-    auto obj = cell(
-            floor( (double)( x - px ) / pixel_size ),
-            floor( (double)( y - py ) / pixel_size ));
+void set_point( point p, bool auto_erase ) {
+    auto obj = p - origin;
+    obj.first = floor( (double)( obj.first ) / pixel_size );
+    obj.second = floor( (double)( obj.second ) / pixel_size );
     auto it = draw.find( obj );
 
-    if ( it != draw.end() && auto_erase ) {
+    if ( it != draw.end() && auto_erase )
         draw.erase( it );
-    } else {
+    else
         draw.insert( obj );
-    }
 }
 
 void gamepole_resize( int resize ) {
@@ -98,21 +130,13 @@ void gamepole_resize( int resize ) {
     }
     SDL_DestroyTexture( texture );
 
-    /* магия для увеличения относительно центра экрана */
-    px -= screen_width / 2 / pixel_size * pixel_size;
-    py -= screen_height / 2 / pixel_size * pixel_size;
-
-    /* увеличение сдвигов соразмерно сетке */
-    px = px * ( pixel_size + resize ) / pixel_size; // я специально
-    py = py * ( pixel_size + resize ) / pixel_size; // не использовал *=
-
-    /* продолжение магии для увеличения относительно центра экрана */
-    px += screen_width / 2 / pixel_size * pixel_size;
-    py += screen_height / 2 / pixel_size * pixel_size;
-
-
+    origin = mouse + (origin - mouse) * (pixel_size + resize) / pixel_size;
     pixel_size += resize;
     texture = generate_wireframe_texture( pixel_size > 3 );
+}
+
+void gamepole_shift( int x, int y ) {
+    origin = origin + point(x, y);
 }
 
 bool intersect( int param, int p1, int p2 ) {
@@ -134,16 +158,16 @@ void game_event( SDL_Event *event ) {
                     game_step = !game_step;
                     break;
                 case SDLK_LEFT:
-                    px -= pixel_size;
+                    gamepole_shift( -pixel_size, 0 );
                     break;
                 case SDLK_RIGHT:
-                    px += pixel_size;
+                    gamepole_shift( pixel_size, 0 );
                     break;
                 case SDLK_UP:
-                    py -= pixel_size;
+                    gamepole_shift( 0, -pixel_size );
                     break;
                 case SDLK_DOWN:
-                    py += pixel_size;
+                    gamepole_shift( 0, pixel_size );
                     break;
                 case SDLK_PERIOD:
                     if ( MAX_COUNT > 0 ) {
@@ -168,25 +192,23 @@ void game_event( SDL_Event *event ) {
             event->key.keysym.sym = 0; // dirty hack
             break;
         case SDL_MOUSEMOTION:
-            mx = ( event->motion.x - MOD(px, pixel_size) ) / pixel_size * pixel_size
-                + MOD(px, pixel_size);
-            my = ( event->motion.y - MOD(py, pixel_size) ) / pixel_size * pixel_size
-                + MOD(py, pixel_size);
+            mouse = point( event->motion.x, event->motion.y ) / pixel_size * pixel_size
+                + MOD( origin, pixel_size );
             if ( button_set ) {
-                set_point( event->motion.x, event->motion.y, false );
+                set_point( point( event->motion.x, event->motion.y ), false );
             }
             /* сдвиг области отрисовки при попаданию в border мыши */
             if ( intersect( event->motion.x, 0, border_size ) ) {
-                px += pixel_size;
+                origin.first += pixel_size;
             }
             if ( intersect( event->motion.x, screen_width - border_size, screen_width ) ) {
-                px -= pixel_size;
+                origin.first -= pixel_size;
             }
             if ( intersect( event->motion.y, 0, border_size ) ) {
-                py += pixel_size;
+                origin.second += pixel_size;
             }
             if ( intersect( event->motion.y, screen_height - border_size, screen_height ) ) {
-                py -= pixel_size;
+                origin.second -= pixel_size;
             }
             break;
         case SDL_MOUSEWHEEL:
@@ -203,7 +225,7 @@ void game_event( SDL_Event *event ) {
             switch ( event->button.button ) {
                 case SDL_BUTTON_LEFT:
                     if ( button_set == false ) {
-                        set_point( event->button.x, event->button.y, true );
+                        set_point( point( event->button.x, event->button.y ), true );
                     }
                     break;
                 default:
@@ -250,16 +272,16 @@ void game_render( void ) {
     SDL_RenderCopy( render, texture, NULL, NULL );
     set_coloru( COLOR_WHITE );
     for ( auto p: draw ) {
-        int xp = p.first * pixel_size + px;
-        int yp = p.second * pixel_size + py;
+        int xp = p.first * pixel_size + origin.first;
+        int yp = p.second * pixel_size + origin.second;
         if ( !( intersect( yp, screen_height - border_size, screen_height ) ) ) {
             draw_pixel_size( point(xp, yp), pixel_size );
         }
     }
     set_coloru( COLOR_RED );
-    draw_pixel_size( point(mx+1, my+1), pixel_size-1 );
+    draw_pixel_size( mouse + point(1, 1), pixel_size-1 );
     swprintf( buffer, BUFFER_SIZE, tmp, game_status[int(game_step)], get_fps(), draw.size(),
-              mx, my, px, py, MAX_COUNT );
+              mouse.first, mouse.second, origin.first, origin.second, MAX_COUNT );
     font_draw( render, ft, buffer, 5, screen_height - 16 );
     if ( help_flag ) {
         set_color4u( 0x00, 0x00, 0xff, 0x96 );

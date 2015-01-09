@@ -145,6 +145,12 @@ bool intersect( int param, int p1, int p2 ) {
     return false;
 }
 
+void get_mouse_pos( point & mouse ) {
+    int x, y;
+    SDL_GetMouseState( &x, &y );
+    mouse = point( x, y ) / pixel_size * pixel_size + MOD( origin, pixel_size );
+}
+
 void game_event( SDL_Event *event ) {
     SDL_PollEvent( event );
     switch ( event->type ) {
@@ -191,8 +197,7 @@ void game_event( SDL_Event *event ) {
             event->key.keysym.sym = 0; // dirty hack
             break;
         case SDL_MOUSEMOTION:
-            mouse = point( event->motion.x, event->motion.y ) / pixel_size * pixel_size
-                + MOD( origin, pixel_size );
+            get_mouse_pos( mouse );
             if ( button_set ) {
                 set_point( point( event->motion.x, event->motion.y ), false );
             }
@@ -278,6 +283,7 @@ void game_render( void ) {
         }
     }
     set_coloru( COLOR_RED );
+    get_mouse_pos( mouse );
     draw_pixel_size( mouse + point(1, 1), pixel_size-1 );
     swprintf( buffer, BUFFER_SIZE, tmp, game_status[int(game_step)], get_fps(), draw.size(),
               mouse.first, mouse.second, origin.first, origin.second, MAX_COUNT );

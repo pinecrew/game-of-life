@@ -1,6 +1,6 @@
 #include "logics.hpp"
 
-bool check_neighbours(cells alive, cell x){
+bool check_neighbours(cells& alive, cell x){
     int count = 0;
     bool empty = (alive.find(x) == alive.end());
     x.first += 1;

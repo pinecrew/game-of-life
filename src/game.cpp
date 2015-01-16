@@ -40,8 +40,8 @@ pair< int, int > operator%(pair< int, int > lhs, int rhs)
 }
 
 const char * game_name = "Conway's Game of Life";
-const int screen_width = 640;
-const int screen_height = 480;
+int screen_width = 640;
+int screen_height = 480;
 const int border_size = 24;
 const int help_box_width = 210;
 const int help_box_height = 130;
@@ -156,6 +156,13 @@ void game_event( SDL_Event *event ) {
     switch ( event->type ) {
         case SDL_QUIT:
             quit_flag = true;
+            break;
+        case SDL_WINDOWEVENT:
+            if ( event->window.event == SDL_WINDOWEVENT_RESIZED ) {
+                screen_width  = event->window.data1;
+                screen_height = event->window.data2;
+                gamepole_resize( 0 );
+            }
             break;
         case SDL_KEYDOWN:
             switch ( event->key.keysym.sym ) {
@@ -313,7 +320,7 @@ void game_init( void ) {
     setlocale( LC_CTYPE, "" );
     SDL_Init( SDL_INIT_VIDEO | SDL_INIT_EVENTS );
     window = SDL_CreateWindow( game_name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                               screen_width, screen_height, SDL_WINDOW_SHOWN );
+                               screen_width, screen_height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
     if ( window == NULL ) {
         game_send_error( EXIT_FAILURE );
     }
